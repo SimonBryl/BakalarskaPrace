@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Školní knihovna</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    .login-container, .app-container, #add-book-section {
+      max-width: 500px;
+      margin: auto;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+ <!-- Přihlašovací formulář -->
+<div class="login-container" id="login-container">
+  <h2>Přihlášení do systému</h2>
+  <form id="login-form">
+    <label for="username">Uživatelské jméno</label><br>
+    <input type="text" id="username" required><br><br>
+
+    <label for="password">Heslo</label><br>
+    <input type="password" id="password" required><br><br>
+
+    <button type="submit">Přihlásit se</button>
+  </form>
+
+  <div id="message" style="color:red; margin-top:10px;"></div>
+</div>
+
+<!-- 2FA formulář -->
+<div class="login-container hidden" id="twofa-container">
+  <h2>Dvoufaktorové ověření (2FA)</h2>
+  <p>Zadejte 6místný kód, který jsme vám poslali e-mailem.</p>
+  
+  <form id="twofa-form">
+    <label for="twofa-code">Kód:</label><br>
+    <input type="text" id="twofa-code" maxlength="6" required><br><br>
+    <button type="submit">Ověřit kód</button>
+  </form>
+
+  <div id="twoFA-message" style="color:red; margin-top:10px;"></div>
+  <button id="back-to-login-btn">Zpět k přihlášení</button>
+</div>
+
+  <!-- Hlavní aplikace po přihlášení -->
+  <div class="app-container hidden" id="app-container">
+    <h1>Vítejte v knihovním systému</h1>
+    <div id="userInfo"></div>
+
+    <section id="admin-section" class="hidden">
+  <div class="functions-sections">
+    
+    <!-- Administrátorské funkce -->
+    <div class="functions-column">
+      <h2>Administrátorské funkce</h2>
+      <button id="add-book-btn">Přidat knihu</button><br />
+      <button id="edit-books-btn">Upravit knihy</button><br />
+    </div>
+
+    <!-- Studentské funkce -->
+    <div class="functions-column">
+      <h2>Funkce pro žáky</h2>
+      <button id="return-loan-btn">Vrátit knihu od žáka</button><br />
+      <button id="create-loan">Vytvořit výpůjčku žákovi</button><br />
+    </div>
+
+    <!-- Učitelské funkce -->
+    <div class="functions-column">
+      <h2>Funkce pro učitele</h2>
+      <button class="evidence">Evidence výpůjček</button><br />
+      <button class="reserve-loan-btn">Rezervace vypůjčené knihy</button><br />
+      <button class="loan-reserve-loan-btn">Vypůjčení rezervované knihy</button><br />
+      <button class="create-loan-teacher-btn">Vypůjčit si knihu</button><br />
+      <button class="return-loan-teacher-btn">Vrátit knihu</button><br />
+    </div>
+
+  </div>
+</section>
+
+
+    <section id="teacher-section" class="hidden">
+      
+      <h2>Uživatelské funkce pro učitele</h2>
+      <button class="evidence">Evidence výpůjček</button><br />
+      <button class="reserve-loan-btn">Rezervace vypůjčené knihy</button><br />
+      <button class="loan-reserve-loan-btn">Vypůjčení rezervované knihy</button><br />
+      <button class="create-loan-teacher-btn">Vypůjčit si knihu</button><br />
+      <button class="return-loan-teacher-btn">Vrátit knihu</button><br />
+      
+      
+    </section>
+
+    <button id="logout-btn">Odhlásit se</button>
+  </div>
+
+  <!-- Sekce pro přidávání knih -->
+  <div id="add-book-section" class="hidden">
+    <h2>Přidat knihy</h2>
+
+    <!-- Přepínače mezi módy -->
+    <div>
+      <button id="manual-add-btn">Přidat knihu ručně</button>
+      <button id="csv-add-btn">Importovat CSV</button>
+    </div>
+
+    <!-- Formulář pro ruční přidání knihy -->
+    <form id="manual-book-form" class="hidden">
+      <h3>Přidat knihu ručně</h3>
+      <label>Autor:</label>
+      <input type="text" id="book-author" required><br><br>
+
+      <label>Název knihy:</label>
+      <input type="text" id="book-title" required><br><br>
+
+      <label>Žánr:</label>
+      <input type="text" id="book-genre" required><br><br>
+
+      <label>Typ knihovny:</label>
+      <select id="library-type" required>
+        <option value="zak">Žák</option>
+        <option value="ucitel">Učitel</option>
+      </select><br><br>
+
+      <button type="submit">Přidat knihu</button>
+    </form>
+
+    <!-- Formulář pro CSV import -->
+    <form id="csv-book-form" class="hidden">
+      <h3>Importovat knihy z CSV</h3>
+      <input type="file" id="csv-file" accept=".csv" required><br><br>
+      <button type="submit">Nahrát CSV</button>
+    </form>
+
+    <br>
+    <button id="back-btn">Zpět</button>
+  </div>
+ <!-- Sekce pro úpravu knih -->
+<div id="edit-books-section" class="hidden">
+  <h2>Upravit knihy</h2>
+  <table id="books-table">
+    <thead>
+      <tr>
+        <th>Autor</th>
+        <th>Název</th>
+        <th>Žánr</th>
+        <th>Typ knihovny</th>
+        <th>Stav</th>
+        <th>Akce</th>
+      </tr>
+    </thead>
+    <tbody id="books-list"></tbody>
+  </table>
+  <button id="back-to-admin-btn">Zpět</button>
+</div>
+
+<div id="create-loan-section" class="hidden">
+  <h2>Vytvořit výpůjčku</h2>
+
+  <div class="vypujcka-container">
+    <!-- Levá polovina - knihy -->
+    <div class="books-section">
+      <h2>Knihy (Žák)</h2>
+      <input type="text" id="searchZanr" placeholder="Hledat podle žánru">
+      <input type="text" id="searchNazev" placeholder="Hledat podle názvu">
+      <input type="text" id="searchAutor" placeholder="Hledat podle autora">
+      <select id="typKnihovny">
+        <option value="zak">Žák</option>
+      </select>
+      <div id="booksResults"></div>
+    </div>
+
+    <!-- Pravá polovina - studenti -->
+    <div class="students-section">
+      <h2>Žáci</h2>
+      <input type="text" id="searchJmeno" placeholder="Hledat podle jména">
+      <input type="text" id="searchPrijmeni" placeholder="Hledat podle příjmení">
+      <div id="studentsResults"></div>
+    </div>
+
+    <!-- Spodní sekce -->
+    <!-- Spodní sekce -->
+<div class="summary-section">
+  <div class="form-group">
+    <label for="vybranaKniha">Vybraná kniha:</label>
+    <input type="text" id="vybranaKniha" readonly placeholder="Vybraná kniha">
+  </div>
+
+  <div class="form-group">
+    <label for="vybranyStudent">Vybraný žák:</label>
+    <input type="text" id="vybranyStudent" readonly placeholder="Vybraný žák">
+  </div>
+
+  <div class="form-group">
+    <label for="datumVraceni">Datum vrácení:</label>
+    <input type="date" id="datumVraceni">
+  </div>
+
+  <div class="buttons">
+    <button id="btnVypujcit">Vypůjčit</button>
+    <button id="btnZpet">Zpět</button>
+  </div>
+</div>
+
+  </div>
+</div>
+<div id="return-loan-section" class="hidden">
+  <h2>Vrácení knih</h2>
+  <input type="text" id="searchReturnJmeno" placeholder="Hledat podle jména">
+  <input type="text" id="searchReturnPrijmeni" placeholder="Hledat podle příjmení">
+  <table id="return-loan-table">
+    <thead>
+      <tr>
+        <th>Kniha</th>
+        <th>Autor</th>
+        <th>Datum<br>výpůjčky</th>
+        <th>Předpokládané<br>datum vrácení</th>
+        <th>Jméno<br>žáka</th>
+        <th>Příjmení<br>žáka</th>
+        <th>Datum<br>narození</th>
+        <th>Akce</th>
+      </tr>
+    </thead>
+    <tbody id="return-loan-list"></tbody>
+  </table>
+  <button id="back-from-return-loan">Zpět</button>
+</div>
+
+
+
+<!-- Sekce evidence -->
+<div id="loans-evidence-section" class="hidden">
+  <h2>Evidence výpůjček</h2>
+
+  <!-- Filtry -->
+  <div id="loan-filters">
+    <label for="loan-status">Zobrazit:</label>
+    <select id="loan-status">
+      <option value="vypujcene" selected>Pouze vypůjčené</option>
+      <option value="vracene">Pouze vrácené</option>
+    </select>
+
+    <input type="text" id="searchBook" placeholder="Hledat podle názvu nebo autora knihy">
+    <input type="text" id="searchStudent" placeholder="Hledat podle jména nebo příjmení studenta">
+  </div>
+  
+<!-- Upozornění na blížící se vrácení -->
+<div id="upcoming-loans-section">
+  <h3>Knihy k vrácení za 7 dní</h3>
+  <table id="upcoming-loans-table">
+    <thead>
+      <tr>
+        <th>Název knihy</th>
+        <th>Autor</th>
+        <th>Datum vrácení</th>
+        <th>Jméno</th>
+        <th>Příjmení</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- sem se budou vkládat řádky JS -->
+    </tbody>
+  </table>
+</div>
+
+  <!-- Tabulka -->
+  <div id="all-loans">
+    <h3>Seznam výpůjček</h3>
+    <table id="loans-table">
+      <thead>
+        <tr>
+          <th>Název knihy</th>
+          <th>Autor</th>
+          <th>Předpokládané datum vrácení</th>
+          <th>Jméno</th>
+          <th>Příjmení</th>
+          <th>Půjčeno od</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <button id="back-from-loans">Zpět</button>
+</div>
+<!-- Sekce rezervace vypůjčené knihy -->
+<div id="reserve-loan-section" class="hidden">
+  <h2>Rezervace vypůjčené knihy</h2>
+
+  <!-- Hledání -->
+  <div id="reserve-filters">
+    <input type="text" id="searchReserveBook" placeholder="Hledat podle názvu nebo autora knihy">
+  </div>
+
+  <!-- Tabulka vypůjčených knih -->
+  <div id="reserve-loans">
+    <h3>Seznam vypůjčených knih</h3>
+    <table id="reserve-loans-table">
+      <thead>
+        <tr>
+          <th>Název knihy</th>
+          <th>Autor</th>
+          <th>Předpokládané datum vrácení</th>
+          <th>Akce</th>
+        </tr>
+      </thead>
+      <tbody>
+      
+      </tbody>
+    </table>
+  </div>
+
+  <button id="back-from-reserve-loan">Zpět</button>
+</div>
+
+<!-- Sekce vypůjčení rezervované knihy -->
+<div id="loan-reserve-loan-section" class="hidden">
+  <h2>Vypůjčení rezervované knihy</h2>
+
+  <!-- Tabulka rezervovaných knih -->
+  <div class="scrollable-table">
+    <table id="loan-reserve-loan-table">
+      <thead>
+        <tr>
+          <th>Autor</th>
+          <th>Název</th>
+          <th>Akce</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Sem se vloží rezervované knihy z JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Formulář pro vypůjčení -->
+  <div class="loan-form">
+    <div class="form-group">
+      <label for="vybranyAutor">Autor:</label>
+      <input type="text" id="vybranyAutor" readonly placeholder="Autor">
+    </div>
+
+    <div class="form-group">
+      <label for="vybranyNazev">Název:</label>
+      <input type="text" id="vybranyNazev" readonly placeholder="Název">
+    </div>
+
+    <div class="form-group">
+      <label for="datumPredpoklad">Předpokládané datum vrácení:</label>
+      <input type="date" id="datumPredpoklad">
+    </div>
+
+    <div class="buttons">
+      <button id="btnLoanReserve">Vypůjčit</button>
+      <button id="btnBackFromLoanReserve">Zpět</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Sekce výpůjčky knihy učitel -->
+<div id="create-loan-teacher-section" class="hidden">
+  <h2>Výpůjčka knihy učitel</h2>
+
+  <div class="books-section-centered"> 
+
+    <div class="books-section">
+      <h2>Knihy (Žák + Učitel)</h2>
+      <input type="text" id="searchTeacherZanr" placeholder="Hledat podle žánru">
+      <input type="text" id="searchTeacherNazev" placeholder="Hledat podle názvu">
+      <input type="text" id="searchTeacherAutor" placeholder="Hledat podle autora">
+      <select id="typKnihovnyTeacher">
+        <option value="zak">Žák</option>
+        <option value="ucitel">Učitel</option>
+      </select>
+      <div class="scrollable-table">
+        <div id="booksResultsTeacher"></div>
+      </div>
+    </div>
+
+    <!-- Spodní sekce -->
+    <div class="summary-section">
+      <div class="form-group">
+        <label for="vybranaKnihaTeacher">Vybraná kniha:</label>
+        <input type="text" id="vybranaKnihaTeacher" readonly placeholder="Vybraná kniha">
+      </div>
+
+      <div class="form-group">
+        <label for="datumVraceniTeacher">Datum vrácení:</label>
+        <input type="date" id="datumVraceniTeacher">
+      </div>
+
+      <div class="buttons">
+        <button id="btnVypujcitTeacher">Vypůjčit</button>
+        <button id="btnZpetTeacher">Zpět</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Sekce pro vracení knih učiteli -->
+<div id="return-loan-teacher-section" class="hidden">
+  <h2>Vrácení knih učitelem</h2>
+  
+  <div style="max-height: 400px; overflow-y: auto;">
+    <table id="return-loan-teacher-table">
+      <thead>
+        <tr>
+          <th>Autor</th>
+          <th>Název</th>
+          <th>Předpokládaný datum vrácení</th>
+          <th>Akce</th>
+        </tr>
+      </thead>
+      <tbody id="return-loan-teacher-list"></tbody>
+    </table>
+  </div>
+
+  <br>
+  <button id="back-from-return-teacher">Zpět</button>
+</div>
+
+
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
